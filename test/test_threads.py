@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Copyright 2026 Mike Fährmann
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+import os
+import sys
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from gallery_dl.extractor.threads import ThreadsPostExtractor  # noqa E402
+
+
+class TestThreads(unittest.TestCase):
+
+    def test_decode_shortcode(self):
+        self.assertEqual(
+            ThreadsPostExtractor.decode_shortcode("C30eveaOmoJ"),
+            "3311406829887187465",
+        )
+
+    def test_extract_files_image(self):
+        post = {
+            "image_versions2": {
+                "candidates": [
+                    {"url": "https://example.org/small.jpg", "width": 320,
+                     "height": 320},
+                    {"url": "https://example.org/large.jpg", "width": 1440,
+                     "height": 1440},
+                ],
+            },
+            "original_width": 1440,
+            "original_height": 1440,
+            "media_type": 19,
+            "pk": "1",
+        }
+
+        files = ThreadsPostExtractor.extract_files(post)
+
+        self.assertEqual(len(files), 1)
+        self.assertEqual(files[0]["url"], "https://example.org/large.jpg")
+        self.assertEqual(files[0]["type"], "image")
+        self.assertEqual(files[0]["extension"], "jpg")
+
+    def test_extract_files_carousel_and_video(self):
+        post = {
+            "carousel_media": [
+                {
+                    "pk": "11",
+                    "media_type": 19,
+                    "image_versions2": {
+                        "candidates": [
+                            {"url": "https://example.org/image.jpg",
+                             "width": 1080, "height": 720},
+                        ],
+                    },
+                    "original_width": 1080,
+                    "original_height": 720,
+                },
+                {
+                    "pk": "12",
+                    "media_type": 2,
+                    "video_duration": 7.25,
+                    "has_audio": True,
+                    "video_versions": [
+                        {"url": "https://example.org/video-low.mp4",
+                         "width": 640, "height": 360},
+                        {"url": "https://example.org/video-high.mp4",
+                         "width": 1920, "height": 1080},
+                    ],
+                    "original_width": 1920,
+                    "original_height": 1080,
+                },
+            ],
+        }
+
+        files = ThreadsPostExtractor.extract_files(post)
+
+        self.assertEqual(len(files), 2)
+        self.assertEqual(files[0]["type"], "image")
+        self.assertEqual(files[0]["num"], 1)
+        self.assertEqual(files[1]["type"], "video")
+        self.assertEqual(files[1]["url"], "https://example.org/video-high.mp4")
+        self.assertEqual(files[1]["num"], 2)
+        self.assertEqual(files[1]["duration"], 7.25)
+        self.assertEqual(files[1]["extension"], "mp4")
+
+    def test_post_text_fallback(self):
+        post = {
+            "caption": None,
+            "text_post_app_info": {
+                "text_fragments": {
+                    "fragments": [
+                        {"plaintext": "Hello"},
+                        {"plaintext": " world"},
+                    ],
+                },
+            },
+        }
+
+        self.assertEqual(ThreadsPostExtractor._post_text(post), "Hello world")
+
+    def test_has_video_and_prefer_post(self):
+        image_post = {
+            "image_versions2": {"candidates": [{"url": "https://e/x.jpg"}]},
+        }
+        video_post = {
+            "video_versions": [{"url": "https://e/x.mp4"}],
+        }
+
+        self.assertFalse(ThreadsPostExtractor._has_video(image_post))
+        self.assertTrue(ThreadsPostExtractor._has_video(video_post))
+        self.assertTrue(ThreadsPostExtractor._prefer_post(video_post, image_post))
+        self.assertFalse(ThreadsPostExtractor._prefer_post(image_post, video_post))
+
+
+if __name__ == "__main__":
+    unittest.main()

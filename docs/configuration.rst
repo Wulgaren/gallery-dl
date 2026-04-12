@@ -7449,6 +7449,9 @@ Default
 Description
     Process URLs otherwise unsupported by gallery-dl with |ytdl|.
 
+    Enable this to use ``yt-dlp``/``youtube-dl`` as an automatic fallback
+    instead of requiring the ``ytdl:`` prefix.
+
 
 extractor.ytdl.format
 ---------------------
@@ -7521,6 +7524,9 @@ Description
 
     Setting this to ``null`` will try to import ``"yt_dlp"``
     followed by ``"youtube_dl"`` as fallback.
+
+    Set this to ``"yt_dlp"`` to explicitly prefer ``yt-dlp`` for the
+    automatic fallback enabled via `extractor.ytdl.enabled`_.
 
 
 extractor.ytdl.raw-options

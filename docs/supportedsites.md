@@ -1111,6 +1111,12 @@ Consider all listed sites to potentially be NSFW.
     <td>Models, Posts</td>
     <td></td>
 </tr>
+<tr id="threads" title="threads">
+    <td>Threads</td>
+    <td>https://www.threads.com/</td>
+    <td>Posts</td>
+    <td></td>
+</tr>
 <tr id="tiktok" title="tiktok">
     <td>TikTok</td>
     <td>https://www.tiktok.com/</td>
