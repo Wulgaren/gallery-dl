@@ -339,3 +339,24 @@ class ThreadsPostExtractor(Extractor):
             self.cookies_check(self.cookies_names, ".threads.com", True) or
             self.cookies_check(self.cookies_names, ".instagram.com", True)
         )
+
+
+class ThreadsShareExtractor(Extractor):
+    """Extractor for Threads share links"""
+    category = "threads"
+    subcategory = "share"
+    root = "https://www.threads.net"
+    pattern = BASE_PATTERN + r"/share/([A-Za-z0-9_-]+)/?(?:[?#].*)?$"
+    example = "https://www.threads.com/share/BACpWLLKkO"
+
+    def items(self):
+        url = text.ensure_http_scheme(self.url)
+        # Browser UA returns SPA HTML without redirect; crawler UA gets 302.
+        location = self.request_location(
+            url,
+            headers={"User-Agent": "facebookexternalhit/1.1"},
+            notfound="URL",
+        )
+        if not location:
+            raise exception.AbortExtraction("Unable to resolve share URL")
+        yield Message.Queue, location, {"_extractor": ThreadsPostExtractor}

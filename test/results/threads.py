@@ -20,4 +20,10 @@ __tests__ = (
     "#class"   : threads.ThreadsPostExtractor,
 },
 
+{
+    "#url"     : "https://www.threads.com/share/BACpWLLKkO",
+    "#category": ("", "threads", "share"),
+    "#class"   : threads.ThreadsShareExtractor,
+},
+
 )
