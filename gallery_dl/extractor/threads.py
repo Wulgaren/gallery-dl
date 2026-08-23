@@ -97,8 +97,13 @@ class ThreadsPostExtractor(Extractor):
         lsd = self._extract_lsd(page)
         post = self._post_data(lsd)
 
-        if self._logged_in and not self._has_video(post):
+        if self._logged_in and (
+                not self._has_video(post) or self._carousel_incomplete(post)):
             post = self._auth_fallback_post(post, lsd)
+        elif not self._logged_in and self._carousel_incomplete(post):
+            self.log.warning(
+                "Carousel may be incomplete. Use authenticated cookies "
+                "to download all slides")
 
         data = self.metadata(post)
         files = self.extract_files(post)
@@ -190,6 +195,13 @@ class ThreadsPostExtractor(Extractor):
     def _auth_fallback_post(self, post, lsd):
         user_id = post.get("user", {}).get("pk") or post.get("user", {}).get("id")
 
+        # Threads GraphQL often returns only the first carousel slide.
+        # Instagram media info returns the full carousel_media list.
+        info_post = self._media_info_post(fatal=False)
+        if self._prefer_post(info_post, post):
+            self.log.debug("Using Instagram media-info data")
+            return info_post
+
         auth_post = self._post_data(lsd, logged_in=True, fatal=False)
         if self._prefer_post(auth_post, post):
             self.log.debug("Using authenticated permalink data")
@@ -202,6 +214,38 @@ class ThreadsPostExtractor(Extractor):
                 return auth_post
 
         return post
+
+    def _media_info_post(self, fatal=True):
+        """Fetch full media via Instagram's media info API."""
+        csrf = self._csrf_token()
+        data = self.request_json(
+            f"https://www.instagram.com/api/v1/media/{self.post_id}/info/",
+            fatal=fatal,
+            headers={
+                "Accept"            : "*/*",
+                "Referer"           : self._page_url(),
+                "Sec-Fetch-Site"    : "same-site",
+                "X-Asbd-Id"         : "129477",
+                "X-CSRFToken"       : csrf,
+                "X-IG-App-Id"       : "238260118697367",
+                "X-Requested-With"  : "XMLHttpRequest",
+            },
+        )
+        if not data:
+            return {}
+        items = data.get("items") or ()
+        return items[0] if items else {}
+
+    def _csrf_token(self):
+        for domain in (".threads.com", ".instagram.com",
+                       "www.threads.com", "www.instagram.com"):
+            for cookie in self.cookies:
+                if cookie.name == "csrftoken" and cookie.domain == domain:
+                    return cookie.value or ""
+        for cookie in self.cookies:
+            if cookie.name == "csrftoken":
+                return cookie.value or ""
+        return ""
 
     def _profile_post_data(self, user_id, lsd, fatal=True):
         data = self.request_json(
@@ -265,9 +309,20 @@ class ThreadsPostExtractor(Extractor):
         return False
 
     @staticmethod
+    def _carousel_incomplete(post):
+        """True when GraphQL likely truncated a carousel to one slide."""
+        if not post or post.get("media_type") != 8:
+            return False
+        return len(post.get("carousel_media") or ()) < 2
+
+    @staticmethod
     def _prefer_post(candidate, current):
         if not candidate:
             return False
+        cand_files = len(ThreadsPostExtractor.extract_files(candidate))
+        curr_files = len(ThreadsPostExtractor.extract_files(current))
+        if cand_files != curr_files:
+            return cand_files > curr_files
         if ThreadsPostExtractor._has_video(candidate):
             return not ThreadsPostExtractor._has_video(current)
         return False

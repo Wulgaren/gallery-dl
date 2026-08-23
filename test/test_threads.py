@@ -111,11 +111,38 @@ class TestThreads(unittest.TestCase):
         video_post = {
             "video_versions": [{"url": "https://e/x.mp4"}],
         }
+        truncated = {
+            "media_type": 8,
+            "carousel_media": [{
+                "pk": "1",
+                "video_versions": [{"url": "https://e/a.mp4", "width": 1,
+                                    "height": 1}],
+            }],
+        }
+        full = {
+            "media_type": 8,
+            "carousel_media": [
+                {
+                    "pk": "1",
+                    "video_versions": [{"url": "https://e/a.mp4", "width": 1,
+                                        "height": 1}],
+                },
+                {
+                    "pk": "2",
+                    "video_versions": [{"url": "https://e/b.mp4", "width": 1,
+                                        "height": 1}],
+                },
+            ],
+        }
 
         self.assertFalse(ThreadsPostExtractor._has_video(image_post))
         self.assertTrue(ThreadsPostExtractor._has_video(video_post))
         self.assertTrue(ThreadsPostExtractor._prefer_post(video_post, image_post))
         self.assertFalse(ThreadsPostExtractor._prefer_post(image_post, video_post))
+        self.assertTrue(ThreadsPostExtractor._carousel_incomplete(truncated))
+        self.assertFalse(ThreadsPostExtractor._carousel_incomplete(full))
+        self.assertTrue(ThreadsPostExtractor._prefer_post(full, truncated))
+        self.assertFalse(ThreadsPostExtractor._prefer_post(truncated, full))
 
 
 if __name__ == "__main__":
