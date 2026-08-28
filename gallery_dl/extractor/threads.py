@@ -95,10 +95,11 @@ class ThreadsPostExtractor(Extractor):
     def items(self):
         page = self.request(self._page_url()).text
         lsd = self._extract_lsd(page)
-        post = self._post_data(lsd)
+        post = self._post_data(lsd, fatal=False)
 
         if self._logged_in and (
-                not self._has_video(post) or self._carousel_incomplete(post)):
+                not post or not self._has_video(post) or
+                self._carousel_incomplete(post)):
             post = self._auth_fallback_post(post, lsd)
         elif not self._logged_in and self._carousel_incomplete(post):
             self.log.warning(
@@ -108,6 +109,8 @@ class ThreadsPostExtractor(Extractor):
         data = self.metadata(post)
         files = self.extract_files(post)
         if not files:
+            if not post:
+                raise exception.StopExtraction("Unable to retrieve post data")
             self.log.info("Post contains no downloadable media")
             return
 

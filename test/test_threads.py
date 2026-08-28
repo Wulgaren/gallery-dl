@@ -144,6 +144,42 @@ class TestThreads(unittest.TestCase):
         self.assertTrue(ThreadsPostExtractor._prefer_post(full, truncated))
         self.assertFalse(ThreadsPostExtractor._prefer_post(truncated, full))
 
+    def test_auth_fallback_after_graphql_failure(self):
+        video_post = {
+            "pk": "3969586254656068720",
+            "code": "DcWzaq2DFxw",
+            "media_type": 2,
+            "user": {"username": "babbyang.g", "pk": "123"},
+            "video_versions": [
+                {"url": "https://example.org/video.mp4", "width": 1080,
+                 "height": 1920},
+            ],
+        }
+
+        class DummyExtractor(ThreadsPostExtractor):
+            def __init__(self):
+                self.post_shortcode = "DcWzaq2DFxw"
+                self.post_id = "3969586254656068720"
+                self._logged_in = True
+                self.log = type("Log", (), {"debug": lambda *a: None})()
+
+            def _post_data(self, lsd, logged_in=False, fatal=True):
+                return {}
+
+            def _media_info_post(self, fatal=True):
+                return video_post
+
+            def _profile_post_data(self, user_id, lsd, fatal=True):
+                return {}
+
+        ext = DummyExtractor()
+        post = ext._auth_fallback_post({}, "lsd-token")
+        files = ThreadsPostExtractor.extract_files(post)
+
+        self.assertEqual(post, video_post)
+        self.assertEqual(len(files), 1)
+        self.assertEqual(files[0]["type"], "video")
+
 
 if __name__ == "__main__":
     unittest.main()
