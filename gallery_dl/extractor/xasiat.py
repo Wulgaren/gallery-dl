@@ -54,6 +54,7 @@ class XasiatAlbumExtractor(XasiatExtractor):
     subcategory = "album"
     pattern = BASE_PATTERN + r"/(\d+)/[^/?#]+)"
     example = "https://www.xasiat.com/albums/12345/TITLE/"
+    filename_fmt = "{num:>03}_{filename}.{extension}"
 
     def items(self):
         path, album_id = self.groups
@@ -81,7 +82,7 @@ class XasiatAlbumExtractor(XasiatExtractor):
 
         yield Message.Directory, "", data
         for data["num"], url in enumerate(urls, 1):
-            yield Message.Url, url, text.nameext_from_url(url[:-1], data)
+            yield Message.Url, url, text.nameext_from_url(url, data)
 
 
 class XasiatTagExtractor(XasiatExtractor):

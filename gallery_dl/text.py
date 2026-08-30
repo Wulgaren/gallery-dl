@@ -91,7 +91,7 @@ def root_from_url(url, scheme="https://"):
 def filename_from_url(url):
     """Extract the last part of an URL to use as a filename"""
     try:
-        return url.partition("?")[0].rpartition("/")[2]
+        return url.partition("?")[0].rstrip("/").rpartition("/")[2]
     except Exception:
         return ""
 

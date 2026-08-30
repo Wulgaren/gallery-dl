@@ -167,6 +167,9 @@ class TestText(unittest.TestCase):
         self.assertEqual(f("http://example.org/v2/filename.ext"), result)
         self.assertEqual(
             f("http://example.org/v2/filename.ext?param=value#frag"), result)
+        self.assertEqual(f("http://example.org/v2/filename.ext/"), result)
+        self.assertEqual(
+            f("http://example.org/v2/filename.ext/?param=value"), result)
 
         # invalid arguments
         for value in INVALID:
@@ -184,6 +187,9 @@ class TestText(unittest.TestCase):
         self.assertEqual(f("http://example.org/v2/filename.ext"), result)
         self.assertEqual(
             f("http://example.org/v2/filename.ext?param=value#frag"), result)
+        self.assertEqual(f("http://example.org/v2/filename.ext/"), result)
+        self.assertEqual(
+            f("http://example.org/v2/filename.ext/?param=value"), result)
 
         # invalid arguments
         for value in INVALID:
@@ -201,6 +207,9 @@ class TestText(unittest.TestCase):
         self.assertEqual(f("http://example.org/v2/filename.ext"), result)
         self.assertEqual(
             f("http://example.org/v2/filename.ext?param=value#frag"), result)
+        self.assertEqual(f("http://example.org/v2/filename.ext/"), result)
+        self.assertEqual(
+            f("http://example.org/v2/filename.ext/?param=value"), result)
         self.assertEqual(
             f("http://example.org/v2/foo%202?bar&<>.ext?param=value#frag"),
             {"filename": "foo 2", "extension": ""},

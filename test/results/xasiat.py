@@ -9,6 +9,20 @@ from gallery_dl.extractor import xasiat
 
 __tests__ = (
 {
+    "#url"     : "https://www.xasiat.com/albums/25488/dearie-no-014-ktv-53p-216m/",
+    "#comment" : "trailing slash + query token must not empty filename",
+    "#class"   : xasiat.XasiatAlbumExtractor,
+    "#pattern" : r"https://www\.xasiat\.com/get_image/\d+/\w+",
+    "#count"   : 53,
+
+    "album_id" : 25488,
+    "count"    : 53,
+    "extension": "jpg",
+    "filename" : r"re:\d+",
+    "num"      : range(1, 53),
+},
+
+{
     "#url"    : "https://www.xasiat.com/albums/28156/photobook-2024-12-09-bomb/",
     "#class"  : xasiat.XasiatAlbumExtractor,
     "#pattern": r"https://www.xasiat.com/get_image/2/\w{32}/sources/28000/28156/\d+.jpg/",
