@@ -60,8 +60,9 @@ class BunkrAlbumExtractor(LolisafeAlbumExtractor):
     """Extractor for bunkr.si albums"""
     category = "bunkr"
     root = "https://bunkr.si"
-    root_dl = "https://get.bunkrr.su"
-    root_api = "https://apidl.bunkr.ru"
+    root_dl = "https://dl.bunkr.cr"
+    root_api = "https://dl.bunkr.cr"
+    root_sign = "https://glb-apisign.cdn.cr/sign"
     archive_fmt = "{album_id}_{id|id_url|slug}"
     pattern = BASE_PATTERN + r"/a/([^/?#]+)"
     example = "https://bunkr.si/a/ID"
@@ -187,7 +188,13 @@ class BunkrAlbumExtractor(LolisafeAlbumExtractor):
         data = self.request_json(self.endpoint, method="POST", headers=headers,
                                  json={"id": data_id})
 
-        if data.get("encrypted"):
+        if "mediafiles" in data:
+            file_url = data["mediafiles"] + data["path"]
+            sign = self.request_json(
+                self.root_sign, params={"path": data["path"]})
+            file_url += ("&" if "?" in file_url else "?") + \
+                f"token={sign['token']}&ex={sign['ex']}"
+        elif data.get("encrypted"):
             key = "SECRET_KEY_" + str(data["timestamp"] // 3600)
             file_url = util.decrypt_xor(data["url"], key.encode())
         else:
