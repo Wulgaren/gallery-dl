@@ -6,8 +6,34 @@
 
 """Extractors for https://www.eporner.com/"""
 
-from .common import GalleryExtractor
+from .common import Extractor, GalleryExtractor, Message
 from .. import text
+
+
+class EpornerVideoExtractor(Extractor):
+    """Extractor for videos from eporner.com"""
+    category = "eporner"
+    subcategory = "video"
+    root = "https://www.eporner.com"
+    filename_fmt = "{id}.{extension}"
+    pattern = (r"(?:https?://)?(?:[\w-]+\.)?eporner\.com"
+               r"/(video-|embed/|hd-porn/)(\w+)(?:/([\w-]+))?")
+    example = "https://pl.eporner.com/video-VIDEOID/SLUG/"
+
+    def items(self):
+        # yt-dlp's Eporner extractor only matches 'eporner.com' and
+        # 'www.eporner.com', so normalize locale subdomains like 'pl.'
+        kind, video_id, slug = self.groups
+        url = f"{self.root}/{kind}{video_id}/"
+        if slug:
+            url += slug + "/"
+
+        data = {
+            "id"       : video_id,
+            "extension": "mp4",
+        }
+        yield Message.Directory, "", data
+        yield Message.Url, "ytdl:" + url, data
 
 
 class EpornerGalleryExtractor(GalleryExtractor):

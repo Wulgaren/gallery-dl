@@ -292,7 +292,7 @@ Consider all listed sites to potentially be NSFW.
 <tr id="eporner" title="eporner">
     <td>EPORNER</td>
     <td>https://www.eporner.com/</td>
-    <td>Galleries</td>
+    <td>Galleries, Videos</td>
     <td></td>
 </tr>
 <tr id="erome" title="erome">
