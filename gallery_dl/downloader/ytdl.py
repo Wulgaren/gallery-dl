@@ -295,7 +295,12 @@ class YoutubeDLDownloader(DownloaderBase):
             path = pathfmt.realpath.replace("%", "%%")
 
         self._set_outtmpl(ytdl_instance, path)
-        ytdl_instance.process_info(info_dict)
+        try:
+            ytdl_instance.process_info(info_dict)
+        finally:
+            # yt-dlp stores its output path in 'filename', which would
+            # leak into 'pathfmt.kwdict' and corrupt filenames on retries
+            info_dict.pop("filename", None)
         pathfmt.temppath = info_dict.get("filepath") or info_dict["_filename"]
         return True
 
